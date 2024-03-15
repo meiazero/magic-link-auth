@@ -1,9 +1,14 @@
-import { randomUUID } from "crypto";
+import { env } from "@/env";
+import { resend } from "@/lib/resend";
+import { generateVerificationToken } from "@/lib/token";
 import { z } from "zod";
 
 const bodyRequestSchema = z.object({
   email: z.string().email({
-    message: "Invalid email",
+    message: "The email is required.",
+  }),
+  url: z.string().min(1, {
+    message: "The url is required.",
   }),
 });
 
@@ -12,10 +17,10 @@ export async function POST(request: Request) {
 
   // validate the body content using zod
   // if the body is invalid, it will throw an error
-  const data = bodyRequestSchema.safeParse(body);
+  const bodyParsed = bodyRequestSchema.safeParse(body);
 
-  if (!data.success) {
-    return new Response(JSON.stringify(data.error), {
+  if (!bodyParsed.success) {
+    return new Response(JSON.stringify(bodyParsed.error), {
       status: 400,
       headers: {
         "content-type": "application/json",
@@ -23,39 +28,50 @@ export async function POST(request: Request) {
     });
   }
 
+  const verification_code = generateVerificationToken(env.TOKEN_SEED);
+
   // try send email
   try {
-    const verificationCode = randomUUID();
+    const link = `${bodyParsed.data.url}/auth/magic-link?code=${verification_code}`;
 
     // send email
-    // const { data: resendData, error } = await resend.emails.send({
-    //   from: "Meiazero <noreply@meiazero.dev>",
-    //   to: [data.data.email],
-    //   subject: "Sign in to your account",
-    //   react: MagicLinkEmail({
-    //     url: env.NEXT_PUBLIC_URL,
-    //     verificationCode,
-    //   }),
-    // });
-
-    // if (error) {
-    //   return new Response(JSON.stringify({ error: error }), {
-    //     status: 400,
-    //     headers: {
-    //       "content-type": "application/json",
-    //     },
-    //   });
-    // }
-
-    return new Response(JSON.stringify({ data: verificationCode }), {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
+    const { data: ResendData, error } = await resend.emails.send({
+      from: "Meiazero <noreply@meiazero.dev>",
+      to: bodyParsed.data.email,
+      subject: "Sign in to your account",
+      html: `
+      <p>Click the link below to access your account</p>
+      <a href="${link}">link</a>
+      <p>Or copy and paste the following link into your browser:</p>
+      <p>${link}</p>
+      `,
+      attachments: [],
     });
-  } catch (error) {
+
+    if (error) {
+      console.error("Error in /api/mail/link route:", error);
+      return new Response(JSON.stringify({ error }), {
+        status: 400,
+        headers: {
+          "content-type": "application/json",
+        },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        ResendData,
+      }),
+      {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      },
+    );
+  } catch (error: any) {
     console.error("Error in /api/mail/link route:", error);
-    return new Response(JSON.stringify({ error: error }), {
+    return new Response(JSON.stringify({ error: error?.message }), {
       status: 500,
       headers: {
         "content-type": "application/json",

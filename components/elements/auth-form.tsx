@@ -34,7 +34,7 @@ export function AuthForm({}: AuthFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       // to test
-      email: "avilaemanueel@gmail.com",
+      email: "",
     },
   });
 
@@ -42,21 +42,25 @@ export function AuthForm({}: AuthFormProps) {
     setIsLoading(!isLoading);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // implement logic to send magic link to email using /api/mail/link
       const response = await fetch(`${env.NEXT_PUBLIC_URL}/api/mail/link`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: values.email }),
+        body: JSON.stringify({
+          url: env.NEXT_PUBLIC_URL,
+          email: values.email,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data);
+        toast.error("Something went wrong", {
+          duration: 3000,
+        });
       }
 
       form.reset();
