@@ -27,7 +27,13 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface AuthFormProps {}
 
-export function AuthForm({}: AuthFormProps) {
+/**
+ * Renders an authentication form.
+ *
+ * @param {AuthFormProps} props - The component props.
+ * @returns {JSX.Element} The rendered component.
+ */
+export function AuthForm({}: AuthFormProps): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const form = useForm<FormValues>({

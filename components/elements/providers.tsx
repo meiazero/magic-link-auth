@@ -5,7 +5,15 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
-export function Providers({ children }: ProvidersProps) {
+/**
+ * Renders the Providers component.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {React.ReactNode} props.children - The child components to be rendered.
+ * @returns {React.ReactNode} The rendered Providers component.
+ */
+export function Providers({ children }: ProvidersProps): React.ReactNode {
   return (
     <>
       <ThemeProvider
