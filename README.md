@@ -34,4 +34,4 @@ bun dev
 - [shadcn-ui](https://ui.shadcn.com)
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](.github/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
